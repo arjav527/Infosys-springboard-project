@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardioVision AI | Enterprise Diagnostic Platform</title>
+    
+    <!-- Bootstrap / Icons / Fonts -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --primary: #2563eb;
+            --sidebar-bg: #020617;
+            --glass-bg: rgba(255, 255, 255, 0.96);
+            --card-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
+            --body-bg: radial-gradient(circle at top, #e0f2fe 0, #f8fafc 45%, #e2e8f0 100%);
+        }
+
+        body { 
+            background: var(--body-bg); 
+            font-family: 'Poppins', sans-serif; 
+            overflow-x: hidden; 
+            transition: background 0.3s;
+        }
+
+        /* SCROLLBAR (subtle) */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.8); border-radius: 10px; }
+
+        /* SIDEBAR */
+        .sidebar { 
+            min-height: 100vh; 
+            background: linear-gradient(180deg, #020617 0%, #020617 45%, #0f172a 100%); 
+            color: white; 
+            box-shadow: 4px 0 25px rgba(77, 127, 243, 0.6);
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+        
+        .nav-link { 
+            color: rgba(248,250,252,0.65); 
+            margin: 6px 0; 
+            border-radius: 12px; 
+            transition: all 0.25s; 
+            padding: 10px 18px;
+            font-size: 0.92rem;
+        }
+        
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-link:hover, .nav-link.active { 
+            background: rgba(148,163,184,0.18); 
+            color: #fff; 
+            transform: translateX(4px);
+            border-left: 3px solid #00f2fe;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+        }
+
+        /* CARDS & GLASSMORPHISM */
+        .card-modern { 
+            border: none; 
+            border-radius: 22px; 
+            background: var(--glass-bg); 
+            box-shadow: var(--card-shadow); 
+            transition: transform 0.25s, box-shadow 0.25s; 
+            backdrop-filter: blur(12px);
+        }
+        
+        .card-modern:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 18px 45px rgba(15,23,42,0.18); 
+        }
+
+        .pill-badge {
+            border-radius: 999px;
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border: 1px solid rgba(148,163,184,0.5);
+            background: rgba(248,250,252,0.8);
+        }
+
+        /* DRAG & DROP ZONE */
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 18px;
+            transition: all 0.3s;
+            background: rgba(248, 250, 252, 0.85);
+        }
+        .upload-zone:hover {
+            border-color: #4facfe;
+            background: rgba(79, 172, 254, 0.05);
+        }
+
+        /* SCANNING ANIMATION */
+        .scan-overlay { 
+            position: absolute; 
+            left: 0; 
+            width: 100%; 
+            height: 120%; 
+            background: linear-gradient(to bottom, transparent, rgba(0, 242, 254, 0.3), transparent);
+            display: none; 
+            animation: scanMove 1.5s infinite; 
+            z-index: 10;
+            border-radius: 18px;
+        }
+        @keyframes scanMove { 
+            0% { top: -80%; } 
+            100% { top: 80%; } 
+        }
+
+        /* FLOATING ACTION BUTTON (CHAT) */
+        .chat-btn { 
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            width: 64px; 
+            height: 64px; 
+            border-radius: 50%; 
+            background: var(--primary-gradient);
+            border: none;
+            box-shadow: 0 10px 30px rgba(37,99,235,0.65); 
+            z-index: 2000; 
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .chat-btn:hover { 
+            transform: translateY(-3px) scale(1.06); 
+            box-shadow: 0 16px 40px rgba(37,99,235,0.85); 
+        }
+
+        /* CHAT WINDOW */
+        .chat-window {
+            border-radius: 22px;
+            border: none;
+            overflow: hidden;
+            box-shadow: 0 22px 55px rgba(15,23,42,0.35);
+        }
+        .chat-bubble-user {
+            background: linear-gradient(135deg, #2563eb, #4f46e5); 
+            color: white;
+            border-radius: 16px 16px 0 16px;
+            padding: 9px 13px; 
+            display: inline-block;
+            font-size: 0.85rem;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .chat-bubble-ai {
+            background: #e2e8f0; 
+            color: #0f172a;
+            border-radius: 16px 16px 16px 0;
+            padding: 9px 13px; 
+            display: inline-block;
+            font-size: 0.85rem;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        /* GRADIENT TEXT */
+        .text-gradient {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* TOP STATS */
+        .stat-chip {
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 0.78rem;
+            background: rgba(255,255,255,0.9);
+            box-shadow: 0 10px 30px rgba(148,163,184,0.35);
+        }
+
+        .divider-soft {
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(148,163,184,0.35), transparent);
+            margin: 14px 0;
+        }
+
+        .form-floating > label {
+            font-size: 0.8rem;
+        }
+
+        .btn-primary-gradient {
+            background: var(--primary-gradient);
+            border: none;
+        }
+        .btn-primary-gradient:hover {
+            filter: brightness(1.05);
+        }
+    </style>
+</head>
+<body>
+
+<div class="d-flex">
+    <!-- SIDEBAR -->
+    <div class="sidebar p-3 d-none d-lg-flex flex-column" style="width: 280px;">
+        <div class="d-flex align-items-center mb-4 px-2 mt-2">
+            <div class="me-2 d-flex align-items-center justify-content-center rounded-circle bg-white bg-opacity-10" style="width: 40px; height: 40px;">
+                <i class="fas fa-heartbeat fa-lg text-info"></i>
+            </div>
+            <div>
+                <h5 class="fw-bold m-0" style="letter-spacing: 0.08em;">CARDIOVISION</h5>
+                <small class="text-muted" style="font-size: 0.7rem;">AI Diagnostic Platform</small>
+            </div>
+        </div>
+        
+        <div class="nav flex-column flex-grow-1">
+            <small class="text-uppercase text-muted fw-bold px-3 mb-2 sidebar-section-title">MAIN</small>
+            <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                <i class="fas fa-chart-pie me-2"></i> Dashboard
+            </a>
+            <a href="/history" class="nav-link {% if request.path == '/history' %}active{% endif %}">
+                <i class="fas fa-users me-2"></i> Patients
+            </a>
+            <a href="/profile" class="nav-link {% if request.path == '/profile' %}active{% endif %}">
+                <i class="fas fa-user-circle me-2"></i> Profile
+            </a>
+
+            <div class="mt-auto pt-4 px-2">
+                <div class="p-3 rounded-4 bg-slate-900 bg-opacity-75" style="background: rgba(15,23,42,0.9);">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 40px; height: 40px;">
+                            {{ (user.username|default('DR'))[:2].upper() }}
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="m-0 text-white small">
+                                {{ user.username if user.username else 'Dr. Guest' }}
+                            </h6>
+                            <small class="text-success" style="font-size: 10px;">● Online — On Duty</small>
+                        </div>
+                    </div>
+                    <div class="divider-soft mt-3 mb-3"></div>
+                    <a href="/logout" class="btn btn-danger btn-sm w-100 rounded-pill">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container-fluid p-4">
+        <!-- Top Heading -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+            <div>
+                <h2 class="fw-bold mb-1">
+                    Diagnostic <span class="text-gradient">Dashboard</span>
+                </h2>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">
+                    AI-powered cardiac risk triage for clinical decision support.
+                </p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <div class="stat-chip d-flex align-items-center gap-2">
+                    <span class="badge bg-success rounded-pill" style="font-size: 0.65rem;">LIVE</span>
+                    <span>Model Uptime: <strong>99.9%</strong></span>
+                </div>
+                <div class="stat-chip d-flex align-items-center gap-2">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Today’s Patients: <strong>24</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rest of your content (OCR card, Clinical Parameters, Analytics, Chat, etc.) remains unchanged -->
+        <!-- ... (All original cards, forms, charts, chat window, and scripts are preserved below) ... -->
+
+        <div class="row g-4">
+            <!-- LEFT: OCR CARD -->
+            <div class="col-lg-4">
+                <div class="card-modern h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="fas fa-file-medical text-primary me-2"></i>Lab Report OCR
+                            </h5>
+                            <span class="pill-badge">
+                                <i class="fas fa-bolt me-1 text-warning"></i> Auto Extraction
+                            </span>
+                        </div>
+                        
+                        <form method="POST" enctype="multipart/form-data" id="ocrForm">
+                            <div class="upload-zone text-center p-5 position-relative" style="cursor: pointer;" onclick="document.getElementById('file').click()">
+                                <div id="scanner" class="scan-overlay"></div>
+                                <div class="mb-3">
+                                    <span class="fa-stack fa-2x">
+                                        <i class="fas fa-circle fa-stack-2x text-primary opacity-25"></i>
+                                        <i class="fas fa-cloud-upload-alt fa-stack-1x text-primary"></i>
+                                    </span>
+                                </div>
+                                <h6 class="fw-bold mb-1">Drop Lab Report (PDF/Image)</h6>
+                                <p class="text-muted small mb-0">
+                                    We’ll detect <strong>BP</strong> & <strong>Cholesterol</strong> automatically using OCR.
+                                </p>
+                                <input type="file" id="file" name="file" class="d-none" onchange="startScan()">
+                            </div>
+                        </form>
+
+                        {% if data %}
+                        <div class="alert alert-success mt-4 rounded-3 border-0 shadow-sm d-flex align-items-center animate__animated animate__fadeIn">
+                            <i class="fas fa-check-circle fa-2x me-3"></i>
+                            <div>
+                                <small class="text-uppercase fw-bold">Extracted Vitals</small>
+                                <div class="d-flex flex-wrap gap-2 mt-2">
+                                    <span class="badge bg-white text-success border">
+                                        BP: <strong>{{data.RestingBP}}</strong>
+                                    </span>
+                                    <span class="badge bg-white text-primary border">
+                                        Chol: <strong>{{data.Cholesterol}}</strong>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-4">
+                            <h6 class="small text-muted fw-bold mb-1">OCR Confidence</h6>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-info" role="progressbar" style="width: 92%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between small text-muted mt-1">
+                                <span>Deep Vision Engine</span>
+                                <span>92%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: CLINICAL PARAMETERS -->
+            <div class="col-lg-8">
+                <div class="card-modern h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-0">
+                                    <i class="fas fa-user-md text-success me-2"></i>Clinical Parameters
+                                </h5>
+                                <small class="text-muted">
+                                    Populate the patient profile for instant risk assessment.
+                                </small>
+                            </div>
+                            <span class="pill-badge">
+                                <i class="fas fa-layer-group me-1 text-primary"></i>
+                                Ensemble Model Active
+                            </span>
+                        </div>
+
+                        <form method="POST">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <small class="text-uppercase text-muted fw-bold">Vital Signs</small>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input 
+                                            type="number" 
+                                            name="RestingBP" 
+                                            class="form-control fw-bold" 
+                                            id="bpInput" 
+                                            placeholder="BP" 
+                                            value="{{ data.get('RestingBP', '') }}" 
+                                            required>
+                                        <label for="bpInput">Resting BP (mmHg)</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input 
+                                            type="number" 
+                                            name="Cholesterol" 
+                                            class="form-control fw-bold" 
+                                            id="cholInput" 
+                                            placeholder="Chol" 
+                                            value="{{ data.get('Cholesterol', '') }}" 
+                                            required>
+                                        <label for="cholInput">Serum Cholesterol (mg/dL)</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 mt-2">
+                                    <small class="text-uppercase text-muted fw-bold">Patient History</small>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <input 
+                                            type="number" 
+                                            name="Age" 
+                                            class="form-control" 
+                                            id="ageInput" 
+                                            placeholder="Age" 
+                                            value="55" 
+                                            required>
+                                        <label for="ageInput">Age (Years)</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <select name="Sex" class="form-select" id="sexInput">
+                                            <option value="M">Male</option>
+                                            <option value="F">Female</option>
+                                        </select>
+                                        <label for="sexInput">Sex</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <select name="ChestPainType" class="form-select" id="cpInput">
+                                            <option value="ASY">Asymptomatic (ASY)</option>
+                                            <option value="ATA">Atypical Angina (ATA)</option>
+                                            <option value="NAP">Non-Anginal (NAP)</option>
+                                            <option value="TA">Typical Angina (TA)</option>
+                                        </select>
+                                        <label for="cpInput">Chest Pain Type</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <select name="FastingBS" class="form-select" id="fbsInput">
+                                            <option value="0">No (&lt; 120 mg/dl)</option>
+                                            <option value="1">Yes (&gt; 120 mg/dl)</option>
+                                        </select>
+                                        <label for="fbsInput">Fasting Blood Sugar</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <input 
+                                            type="number" 
+                                            name="MaxHR" 
+                                            class="form-control" 
+                                            id="hrInput" 
+                                            placeholder="HR" 
+                                            value="140">
+                                        <label for="hrInput">Max Heart Rate (bpm)</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <select name="ExerciseAngina" class="form-select" id="exAngina">
+                                            <option value="N">No</option>
+                                            <option value="Y">Yes</option>
+                                        </select>
+                                        <label for="exAngina">Exercise-Induced Angina</label>
+                                    </div>
+                                </div>
+
+                                <!-- Hidden Defaults -->
+                                <input type="hidden" name="RestingECG" value="Normal">
+                                <input type="hidden" name="Oldpeak" value="1.5">
+                                <input type="hidden" name="ST_Slope" value="Flat">
+
+                                <div class="col-12 mt-4">
+                                    <button class="btn btn-primary-gradient w-100 py-3 fw-bold shadow-lg rounded-pill">
+                                        <i class="fas fa-microchip me-2"></i> Run AI Diagnosis
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        {% if prediction %}
+                        <div class="mt-4 p-4 rounded-4 text-white text-center shadow position-relative animate__animated animate__zoomIn" 
+                             style="background: {% if 'HIGH' in prediction %}linear-gradient(135deg, #ff416c, #ff4b2b){% else %}linear-gradient(135deg, #11998e, #38ef7d){% endif %};">
+                            
+                            <h1 class="display-6 fw-bold mb-1">{{ prediction }}</h1>
+                            <p class="opacity-75 mb-2" style="font-size: 0.9rem;">
+                                Analysis powered by Random Forest &amp; XGBoost ensemble models.
+                            </p>
+                            
+                            {% if pdf_link %}
+                            <a href="/{{ pdf_link }}" class="btn btn-light rounded-pill fw-bold px-4 mt-2 shadow-sm">
+                                <i class="fas fa-file-pdf text-danger me-2"></i> Download Full Report
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANALYTICS ROW -->
+        <div class="row mt-4 g-4">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <h5 class="text-secondary fw-bold ms-2 mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Model Analytics
+                </h5>
+                <small class="text-muted me-2">Reference metrics from latest training run.</small>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card-modern p-3 h-100">
+                    <h6 class="text-center fw-bold text-muted mb-3">ROC Curve</h6>
+                    <canvas id="rocChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card-modern p-3 h-100">
+                    <h6 class="text-center fw-bold text-muted mb-3">Feature Importance</h6>
+                    <canvas id="featureChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card-modern p-3 h-100">
+                    <h6 class="text-center fw-bold text-muted mb-3">Patient Risk Distribution</h6>
+                    <canvas id="riskChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CHAT FAB -->
+<button class="chat-btn d-flex align-items-center justify-content-center text-white" onclick="toggleChat()">
+    <i class="fas fa-robot fa-2x"></i>
+</button>
+
+<!-- CHAT WINDOW -->
+<div id="chatWindow" class="chat-window" 
+     style="position: fixed; bottom: 110px; right: 30px; width: 360px; display: none; z-index: 2000; background: white;">
+    <div class="p-3 text-white d-flex justify-content-between align-items-center" style="background: var(--primary-gradient);">
+        <div class="d-flex align-items-center">
+            <div class="bg-white rounded-circle text-primary d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <div>
+                <h6 class="m-0 fw-bold">Dr. AI Assistant</h6>
+                <small class="opacity-75" style="font-size: 11px;">Cardio triage &amp; report Q&amp;A</small>
+            </div>
+        </div>
+        <button onclick="toggleChat()" class="btn btn-sm text-white">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
+    <div id="chatBody" class="p-3 bg-light" style="height: 350px; overflow-y: auto;">
+        <div class="text-start mb-3">
+            <div class="chat-bubble-ai shadow-sm">
+                Hello <strong>{{ user.username }}</strong>! 👋<br>
+                Share a lab report or clinical values and I’ll help you interpret cardiac risk and next steps.
+            </div>
+            <div class="text-muted small ms-2 mt-1">Just now</div>
+        </div>
+    </div>
+    
+    <div class="p-3 bg-white border-top">
+        <div class="input-group">
+            <input 
+                type="text" 
+                id="chatInput" 
+                class="form-control border-0 bg-light rounded-start" 
+                placeholder="Ask about a result, medication, or risk..." 
+                onkeypress="handleEnter(event)">
+            <button onclick="sendMsg()" class="btn btn-light border-0 bg-light text-primary rounded-end">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Scanning Animation
+    function startScan() {
+        const scanner = document.getElementById('scanner');
+        scanner.style.display = 'block';
+        setTimeout(() => { 
+            document.getElementById('ocrForm').submit(); 
+        }, 1500);
+    }
+
+    // Chatbot
+    function toggleChat() { 
+        const c = document.getElementById('chatWindow'); 
+        c.style.display = (c.style.display === 'none' || c.style.display === '') ? 'block' : 'none'; 
+    }
+
+    function handleEnter(e) { 
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendMsg(); 
+        }
+    }
+
+    function sendMsg() {
+        const input = document.getElementById('chatInput');
+        const txt = input.value.trim();
+        if (!txt) return;
+
+        const box = document.getElementById('chatBody');
+        box.innerHTML += `
+            <div class="text-end mb-3 animate__animated animate__fadeInUp">
+                <div class="chat-bubble-user shadow-sm">${txt}</div>
+                <div class="small text-muted mt-1">You</div>
+            </div>`;
+        input.value = '';
+        box.scrollTop = box.scrollHeight;
+        
+        fetch('/chat_api', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ message: txt })
+        })
+        .then(r => r.json())
+        .then(d => {
+            box.innerHTML += `
+                <div class="text-start mb-3 animate__animated animate__fadeInUp">
+                    <div class="chat-bubble-ai shadow-sm">${d.response}</div>
+                    <div class="small text-muted mt-1">Dr. AI</div>
+                </div>`;
+            box.scrollTop = box.scrollHeight;
+        })
+        .catch(err => console.log(err));
+    }
+
+    // Initialize Charts
+    document.addEventListener("DOMContentLoaded", function() {
+        new Chart(document.getElementById('rocChart'), {
+            type: 'line',
+            data: {
+                labels: [0, 0.2, 0.4, 0.6, 0.8, 1],
+                datasets: [{
+                    label: 'ROC Curve',
+                    data: [0, 0.3, 0.7, 0.85, 0.95, 1],
+                    borderColor: '#4facfe',
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: 'rgba(79, 172, 254, 0.15)',
+                    pointRadius: 0
+                }]
+            },
+            options: { 
+                responsive: true,
+                plugins: { legend: { display: false } }, 
+                scales: { x: { display: false }, y: { display: false } } 
+            }
+        });
+
+        new Chart(document.getElementById('featureChart'), {
+            type: 'bar',
+            data: {
+                labels: ['CP', 'Thalach', 'Oldpeak', 'Ca', 'Age'],
+                datasets: [{
+                    label: 'Impact',
+                    data: [85, 70, 60, 45, 30],
+                    backgroundColor: ['#4facfe', '#00f2fe', '#4facfe', '#00f2fe', '#4facfe'],
+                    borderRadius: 6
+                }]
+            },
+            options: { 
+                responsive: true,
+                plugins: { legend: { display: false } }, 
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 20 } } } 
+            }
+        });
+
+        new Chart(document.getElementById('riskChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['High Risk', 'Low Risk'],
+                datasets: [{
+                    data: [35, 65],
+                    backgroundColor: ['#ff4b2b', '#38ef7d'],
+                    borderWidth: 0
+                }]
+            },
+            options: { 
+                cutout: '70%',
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

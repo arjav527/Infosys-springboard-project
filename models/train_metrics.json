@@ -1,0 +1,28 @@
+{
+  "train_accuracy": 0.9756410256410256,
+  "test_accuracy": 0.8985507246376812,
+  "roc_auc": 0.9286926994906621,
+  "cv_roc_auc_scores": [
+    0.9459588713534195,
+    0.9399808703969393,
+    0.8884505021520803,
+    0.9509780246317314,
+    0.9030427432987201
+  ],
+  "n_train": 780,
+  "n_test": 138,
+  "feature_columns": [
+    "Age",
+    "RestingBP",
+    "Cholesterol",
+    "FastingBS",
+    "MaxHR",
+    "Oldpeak",
+    "Athero_Score",
+    "Sex",
+    "ChestPainType",
+    "RestingECG",
+    "ExerciseAngina",
+    "ST_Slope"
+  ]
+}
